@@ -12,6 +12,18 @@ The project investigates how CO2 emissions vary over time using real-world emiss
 - Country comparison through clustering
 - Forecasting with LSTM
 
+## Key Results
+- Forecasted short-term CO2 emission trends for selected cases such as Russia and the global level
+- Compared actual and predicted emissions on test data
+- Produced visual forecasting outputs to support time series interpretation
+- Organized project assets including notebook, dataset, report, presentation, and result figures
+
+## Results
+Example outputs are available in the `results/` folder, including:
+- 30-day forecast plots
+- Actual vs predicted comparison plots
+- Country-level and world-level emission visualizations
+
 ## Repository Structure
 - `notebooks/` → project notebook
 - `data/` → dataset files
@@ -22,13 +34,14 @@ The project investigates how CO2 emissions vary over time using real-world emiss
 - `requirements.txt` → required Python libraries
 
 ## Main Files
-- `notebooks/LSTM_Notebook_UPDATE.ipynb`
+- `notebooks/co2_emissions_lstm_forecasting.ipynb`
 - `data/carbonmonitor-global_datas_2025-10-07.xlsx`
-- `presentation/Analyzing Daily CO2 Emissions - PPT Presentation V3.pptx`
-- `report/DM&ML_project-1.pdf`
+- `presentation/daily_co2_emissions_presentation.pptx`
+- `report/co2_emissions_report.pdf`
 
 ## How to Run
 Install the required libraries first:
 
 ```bash
 pip install -r requirements.txt
+
