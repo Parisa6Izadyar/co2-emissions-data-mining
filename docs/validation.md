@@ -13,6 +13,15 @@ The tests check daily and sector coverage, duplicate and missing records, aggreg
 
 The notebook smoke run executes all 48 cells with one epoch per geography. A separate benchmark trains for up to 30 epochs and evaluates each model on 366 test targets. CI also checks installation against `requirements-tested.txt`.
 
+## Latest verified analysis
+
+[Run 40974223226](https://github.com/Parisa6Izadyar/co2-emissions-data-mining/actions/runs/40974223226) passed at source commit `3f41b6c2b140a1bd3fada1391ef291e53cbd36a8`:
+
+- All 17 regression tests passed.
+- All 48 notebook cells executed in a fresh kernel with one-epoch smoke training.
+- The separate benchmark completed for WORLD (30 epochs) and Russia (17 epochs), using 366 test dates for each geography.
+- Rounded MAE and RMSE values reproduced the recorded benchmark. Evaluation plots include both naive baselines.
+
 ## Recorded benchmark
 
 [Run 40971872716](https://github.com/Parisa6Izadyar/co2-emissions-data-mining/actions/runs/40971872716) passed on Ubuntu with Python 3.12.15. It executed the notebook and reproduced the rounded benchmark scores after installation with the tested dependency constraints.

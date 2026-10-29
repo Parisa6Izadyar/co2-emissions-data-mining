@@ -6,9 +6,9 @@ An academic team project using Carbon Monitor data to explore emissions trends, 
 
 ## Run the project
 
-[Open in GitHub Codespaces](https://codespaces.new/Parisa6Izadyar/co2-emissions-data-mining?ref=improve%2Freproducible-co2-analysis)
+[Open in GitHub Codespaces](https://codespaces.new/Parisa6Izadyar/co2-emissions-data-mining?ref=main)
 
-Use the `improve/reproducible-co2-analysis` branch while the pull request is open. The dev container installs Python 3.12 and the tested dependencies. Once setup finishes, open `notebooks/co2_emissions_lstm_forecasting.ipynb`, select the Python kernel and run the cells in order.
+The dev container installs Python 3.12 and the tested dependencies. Once setup finishes, open `notebooks/co2_emissions_lstm_forecasting.ipynb`, select the Python kernel and run the cells in order.
 
 To run the tests and forecasting workflow in the Codespaces terminal:
 
@@ -73,7 +73,7 @@ Errors are in MtCO₂/day; lower is better. The seven-day baseline performed bes
 
 Test predictions are made one day at a time, using observations available before each target date. The separate 30-day recursive extension starts after the last observation and has no measured outcomes in this snapshot.
 
-[Full-precision benchmark](docs/benchmark.json) · [Verified run](https://github.com/Parisa6Izadyar/co2-emissions-data-mining/actions/runs/40971872716)
+[Full-precision benchmark](docs/benchmark.json) · [Verified run](https://github.com/Parisa6Izadyar/co2-emissions-data-mining/actions/runs/40974223226)
 
 ### Generated outputs
 
