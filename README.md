@@ -15,7 +15,7 @@ For local execution, use **Python 3.12** on Linux (the CI environment):
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
+python -m pip install -r requirements.txt -c requirements-tested.txt
 python -m pytest -q
 python -m co2_analysis --validate-only
 python -m co2_analysis --countries WORLD Russia --epochs 30
@@ -48,6 +48,21 @@ Aggregate the six sectors to one observation per geography per day. Split raw da
 Report MAE and RMSE in original units for LSTM, previous-day persistence and seven-day seasonal-naive predictions on exactly the same test dates. These are **rolling one-day-ahead** results, not an evaluation of a fixed-origin 30-day forecast. The recursive future extension is illustrative and has no held-out outcome in this snapshot. A more complex model is not assumed to beat the baselines.
 
 Run outputs go to `results/reproduced/`: per-day predictions, future extensions, comparison plots and `metrics.json` with dates, sample counts, software versions and the dataset checksum. See [methodology and corrections](docs/methodology.md) and [validation record](docs/validation.md). CI uploads its executed notebook and benchmark files as the `co2-evaluation` artifact.
+
+## Measured baseline comparison
+
+The [verified CI run](https://github.com/Parisa6Izadyar/co2-emissions-data-mining/actions/runs/40971380327) evaluated 366 one-day-ahead targets per geography, from 2024-08-31 through 2025-08-31. Lower errors are better; all values below are in MtCO₂/day.
+
+| Geography | Model | MAE | RMSE |
+| --- | --- | ---: | ---: |
+| WORLD | LSTM | 2.7739 | 3.3806 |
+| WORLD | Previous-day persistence | 2.7185 | 3.4115 |
+| WORLD | Seven-day seasonal naive | **2.5474** | **3.3748** |
+| Russia | LSTM | 0.1266 | 0.1679 |
+| Russia | Previous-day persistence | **0.0988** | **0.1266** |
+| Russia | Seven-day seasonal naive | 0.1619 | 0.2222 |
+
+The LSTM did **not** outperform the best naive baseline for either geography in this run. WORLD used all 30 epochs; Russia stopped after 17, restoring the best validation weights. These findings support baseline-aware evaluation, not a claim that LSTM is the preferred forecasting method. Full-precision scores and split details are in [benchmark.json](docs/benchmark.json). `requirements-tested.txt` records the dependency versions installed in that run; fixed seeds do not guarantee bit-identical results across hardware.
 
 ## Files
 
