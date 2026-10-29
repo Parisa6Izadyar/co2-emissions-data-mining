@@ -35,7 +35,7 @@ def main():
         (args.output / "metrics.json").write_text(json.dumps(report, indent=2) + "\n")
         import matplotlib.pyplot as plt
         fig, axes = plt.subplots(2, 1, figsize=(11, 7), layout="constrained")
-        predictions.set_index("date")[["actual", "lstm", "seasonal_naive_7"]].plot(ax=axes[0])
+        predictions.set_index("date")[["actual", "lstm", "persistence", "seasonal_naive_7"]].plot(ax=axes[0])
         axes[0].set(title=f"{country}: rolling one-day-ahead test predictions", ylabel="MtCO2/day")
         axes[1].plot(history["loss"], label="train")
         axes[1].plot(history["val_loss"], label="validation")

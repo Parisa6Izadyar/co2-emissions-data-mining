@@ -1,16 +1,27 @@
-# Daily CO₂ Emissions: Data Mining and Forecasting
+# Daily CO₂ Emissions
 
-An academic team project exploring daily emissions across countries and sectors, with exploratory analysis, symbolic rare-pattern scoring, country clustering and LSTM forecasting. The reproducible workflow uses the bundled Carbon Monitor workbook and evaluates forecasting against simple baselines.
+An academic team project using Carbon Monitor data to explore emissions trends, compare countries and evaluate daily forecasts. The analysis covers six sectors across 14 geographies from January 2019 to August 2025.
 
-**Dataset:** 204,540 country-sector-day records, 2,435 days (1 January 2019–31 August 2025), six sectors and 14 geographies. Eleven are individual countries; WORLD, ROW and EU27 & UK are aggregates. Values are million tonnes of CO₂ per day (MtCO₂/day). Do not sum overlapping geographies.
+[CI results](https://github.com/Parisa6Izadyar/co2-emissions-data-mining/actions/workflows/tests.yml) · [Notebook](notebooks/co2_emissions_lstm_forecasting.ipynb) · [Methods](docs/methodology.md) · [Evaluation](docs/validation.md)
 
-## Start here
+## Run the project
 
 [Open in GitHub Codespaces](https://codespaces.new/Parisa6Izadyar/co2-emissions-data-mining?ref=improve%2Freproducible-co2-analysis)
 
-Select the `improve/reproducible-co2-analysis` branch while this change is under review. The dev container installs Python dependencies; open `notebooks/co2_emissions_lstm_forecasting.ipynb`, select the Python kernel, and run all cells. Installation needs internet access; the default analysis then runs without API calls or credentials. CPU training is supported; no GPU is required. Codespaces configuration is provided, but a hosted Codespace has not been manually verified.
+Use the `improve/reproducible-co2-analysis` branch while the pull request is open. The dev container installs Python 3.12 and the tested dependencies. Once setup finishes, open `notebooks/co2_emissions_lstm_forecasting.ipynb`, select the Python kernel and run the cells in order.
 
-For local execution, use **Python 3.12** on Linux (the CI environment):
+To run the tests and forecasting workflow in the Codespaces terminal:
+
+```bash
+python -m pytest -q
+python -m co2_analysis --countries WORLD Russia --epochs 30
+```
+
+Installation requires internet access. The default analysis then uses local data and runs on CPU without API keys.
+
+### Local setup
+
+The workflow is tested on Ubuntu with Python 3.12.
 
 ```bash
 python -m venv .venv
@@ -21,37 +32,33 @@ python -m co2_analysis --validate-only
 python -m co2_analysis --countries WORLD Russia --epochs 30
 ```
 
-On Windows use `.venv\Scripts\activate` instead. Other platforms are not covered by CI.
+On Windows, activate the environment with `.venv\Scripts\activate`. Other operating systems are not covered by CI.
 
-Open the notebook with `jupyter lab`. To execute it in a fresh kernel:
+Use `jupyter lab` to open the notebook. For a fresh-kernel execution from the terminal:
 
 ```bash
 python -m ipykernel install --user --name python3
-python scripts/execute_notebook.py --smoke
+python scripts/execute_notebook.py
 ```
 
-The smoke run executes the entire default notebook with one training epoch per geography to check integration. Omit `--smoke` for up to 30 epochs. Smoke-run scores are not benchmark results.
+Add `--smoke` for a one-epoch integration check. The benchmark uses up to 30 epochs per geography, with early stopping.
 
-## What the project demonstrates
+## Data and analysis
 
-- Schema, duplicate, sector-coverage and daily-calendar validation on an Excel dataset.
-- Sector and country comparisons, rolling trends and seasonal decomposition.
-- Exploratory symbolic rare-pattern scoring and CUSUM diagnostics, with interpretation limits.
-- K-Means and Ward clustering, keeping cluster labels separate from input features.
-- LSTM forecasting with chronological train/validation/test partitions, training-only scaling, early stopping and baseline comparisons.
-- Regression tests, a command-line workflow, notebook execution and GitHub Actions validation.
+The bundled workbook contains **204,540 country-sector-day records** over **2,435 days**, from 1 January 2019 to 31 August 2025. Each record estimates emissions in million tonnes of CO₂ per day (MtCO₂/day). Eleven geographies are individual countries; WORLD, ROW and EU27 & UK are aggregates. Keep overlapping aggregates separate when comparing totals.
 
-## Forecasting protocol
+The notebook includes:
 
-Aggregate the six sectors to one observation per geography per day. Split raw dates 70%/15%/15%; fit the scaler on training data only. Use the preceding 30 days to predict the next day. Validation selects the stopping epoch; test targets never train the model or select the epoch.
+- Daily, monthly and sector-level comparisons, with seasonal decomposition.
+- Rare symbolic pattern scores and CUSUM residual diagnostics for exploratory analysis.
+- K-Means and Ward clustering of the 11 individual countries.
+- LSTM forecasting for WORLD and Russia, compared with previous-day persistence and a seven-day seasonal-naive baseline.
 
-Report MAE and RMSE in original units for LSTM, previous-day persistence and seven-day seasonal-naive predictions on exactly the same test dates. These are **rolling one-day-ahead** results, not an evaluation of a fixed-origin 30-day forecast. The recursive future extension is illustrative and has no held-out outcome in this snapshot. A more complex model is not assumed to beat the baselines.
+The loader handles the workbook's mixed date formats and checks duplicate keys, calendar continuity and coverage of all six sectors. [Data and methods](docs/methodology.md) explains the date correction and the assumptions behind each analysis.
 
-Run outputs go to `results/reproduced/`: per-day predictions, future extensions, comparison plots and `metrics.json` with dates, sample counts, software versions and the dataset checksum. See [methodology and corrections](docs/methodology.md) and [validation record](docs/validation.md). CI uploads its executed notebook and benchmark files as the `co2-evaluation` artifact.
+## Forecasting results
 
-## Measured baseline comparison
-
-The [verified CI run](https://github.com/Parisa6Izadyar/co2-emissions-data-mining/actions/runs/40971380327) evaluated 366 one-day-ahead targets per geography, from 2024-08-31 through 2025-08-31. Lower errors are better; all values below are in MtCO₂/day.
+The model uses 30 observed days to predict the next day. Raw dates are split 70%/15%/15% for training, validation and test. Scaling uses training observations, and validation loss selects the stopping epoch. All three forecasting methods are evaluated on the same **366 test dates**, from 31 August 2024 to 31 August 2025.
 
 | Geography | Model | MAE | RMSE |
 | --- | --- | ---: | ---: |
@@ -62,28 +69,43 @@ The [verified CI run](https://github.com/Parisa6Izadyar/co2-emissions-data-minin
 | Russia | Previous-day persistence | **0.0988** | **0.1266** |
 | Russia | Seven-day seasonal naive | 0.1619 | 0.2222 |
 
-The LSTM did **not** outperform the best naive baseline for either geography in this run. WORLD used all 30 epochs; Russia stopped after 17, restoring the best validation weights. These findings support baseline-aware evaluation, not a claim that LSTM is the preferred forecasting method. Full-precision scores and split details are in [benchmark.json](docs/benchmark.json). `requirements-tested.txt` records the dependency versions installed in that run; fixed seeds do not guarantee bit-identical results across hardware.
+Errors are in MtCO₂/day; lower is better. The seven-day baseline performed best for WORLD, and persistence performed best for Russia. The LSTM trained for 30 and 17 epochs respectively. These results come from one temporal split and seed 42; they provide a baseline comparison for this experiment.
 
-## Files
+Test predictions are made one day at a time, using observations available before each target date. The separate 30-day recursive extension starts after the last observation and has no measured outcomes in this snapshot.
 
-| Path | Purpose |
+[Full-precision benchmark](docs/benchmark.json) · [Verified run](https://github.com/Parisa6Izadyar/co2-emissions-data-mining/actions/runs/40971872716)
+
+### Generated outputs
+
+A CLI run writes to `results/reproduced/`:
+
+- `world_test.csv` and `russia_test.csv`: observed values and all three predictions by date.
+- `world_future.csv` and `russia_future.csv`: illustrative recursive extensions.
+- `world_evaluation.png` and `russia_evaluation.png`: test predictions and training curves.
+- `metrics.json`: errors, split dates, sample counts, software versions and dataset checksum.
+
+Notebook outputs are written separately to `results/notebook/`. CI uploads its executed notebook and benchmark files as the `co2-evaluation` artifact. Use `requirements-tested.txt` to install the recorded dependency versions; small numerical differences across hardware are possible.
+
+## Repository files
+
+| Path | Contents |
 | --- | --- |
-| [Notebook](notebooks/co2_emissions_lstm_forecasting.ipynb) | Guided exploratory analysis and forecasting |
-| `co2_analysis/` | Shared loading, validation and forecasting code |
-| `tests/` | Regression checks for chronology, leakage and aggregation |
-| [Dataset](data/carbonmonitor-global_datas_2025-10-07.xlsx) | Original bundled workbook; left unchanged |
-| [Original report](report/DM%26ML_project-1_260924_001625.pdf) | Historical course submission |
-| [Presentation](presentation/daily_co2_emissions_presentation.pptx) | Historical course slides |
-| `results/*.png` | Historical plots; not regenerated benchmark evidence |
+| `co2_analysis/` | Data validation, chronological splits and forecasting |
+| `notebooks/` | Exploration and forecasting notebook |
+| `tests/` | Regression checks for data quality, aggregation and chronology |
+| [Workbook](data/carbonmonitor-global_datas_2025-10-07.xlsx) | Bundled Carbon Monitor snapshot |
+| [Course report](report/DM%26ML_project-1_260924_001625.pdf) | Original October 2025 submission |
+| [Presentation](presentation/daily_co2_emissions_presentation.pptx) | Original course slides |
+| `results/*.png` | Figures from the original course analysis |
 
-The report, slides and original figures predate the corrected workflow and can contain different code, metrics and interpretations. They are retained as course artifacts, not evidence for the corrected evaluation.
+The report, slides and original figures document the course submission. Use the current workflow and benchmark for the revised forecasting evaluation.
 
-## Optional World Bank enrichment
+## Optional population and GDP data
 
-The notebook's GDP/population section is disabled by default and is not needed for forecasting. Install `requirements-optional.txt`, set `RUN_WORLD_BANK = True` in the notebook, and rerun to request live World Bank indicators. Live values and availability can change; this optional path is not covered by the offline CI run.
+Install `requirements-optional.txt` and set `RUN_WORLD_BANK = True` in the notebook to retrieve World Bank indicators. This section compares complete years through 2024. It is separate from the default forecasting workflow, and live API values may change.
 
-## Context and limitations
+## Project context
 
-The original report credits Francesco Stellato, Daniele Cavuto, Parisa Izadiyar and Aashi Sudhanshu Mehrotra, for the Data Mining & Machine Learning course (October 2025). This repository presents a team project, not sole authorship of all components.
+The original report credits Francesco Stellato, Daniele Cavuto, Parisa Izadiyar and Aashi Sudhanshu Mehrotra, for the Data Mining & Machine Learning course in October 2025. Data source: [Carbon Monitor](https://carbonmonitor.org/), as cited in that report.
 
-Source attribution: [Carbon Monitor](https://carbonmonitor.org/), as documented in the original report. The workbook is an existing snapshot; this repository does not establish new redistribution rights. Emissions are estimates, not direct measurements. A single temporal holdout and one random seed do not establish generalisation across countries, regimes or model choices. Clustering and anomaly results are descriptive, with no labelled validation set or causal interpretation.
+Clustering and rare-pattern scores describe the observed dataset. They have no labelled validation set. CUSUM results also depend on assumptions about seasonality and residual dependence; the notebook treats them as exploratory diagnostics.

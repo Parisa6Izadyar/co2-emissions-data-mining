@@ -17,7 +17,7 @@ def test_future_values_cannot_change_training_scaler_or_windows():
     np.testing.assert_array_equal(a.scaler.data_max_, b.scaler.data_max_)
     np.testing.assert_array_equal(a.x[a.train], b.x[b.train])
     np.testing.assert_array_equal(a.y[a.train], b.y[b.train])
-    assert b.scaled[-1, 0] > 1  # Future extremes must not be clipped or fitted.
+    assert b.scaled[-1, 0] > 1  # Keep out-of-range future values visible to the model.
 
 
 def test_target_dates_are_disjoint_and_windows_use_only_past():
@@ -35,10 +35,14 @@ def test_target_dates_are_disjoint_and_windows_use_only_past():
 @pytest.mark.parametrize("kind", ["gap", "duplicate", "reverse", "nan"])
 def test_invalid_series_is_rejected(kind):
     raw = series()
-    if kind == "gap": raw = raw.drop(raw.index[50])
-    if kind == "duplicate": raw.index = [raw.index[0]] * len(raw)
-    if kind == "reverse": raw = raw.iloc[::-1]
-    if kind == "nan": raw.iloc[20] = np.nan
+    if kind == "gap":
+        raw = raw.drop(raw.index[50])
+    if kind == "duplicate":
+        raw.index = [raw.index[0]] * len(raw)
+    if kind == "reverse":
+        raw = raw.iloc[::-1]
+    if kind == "nan":
+        raw.iloc[20] = np.nan
     with pytest.raises(ValueError): prepare(raw)
 
 

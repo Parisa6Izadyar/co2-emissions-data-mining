@@ -1,4 +1,4 @@
-"""Load the bundled workbook without depending on Colab or remote APIs."""
+"""Read and validate the bundled Carbon Monitor workbook."""
 from datetime import datetime
 from pathlib import Path
 import hashlib
@@ -9,6 +9,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data/carbonmonitor-global_datas_2025-10-07.xlsx"
 AGGREGATES = {"WORLD", "ROW", "EU27 & UK"}
+SECTORS = {"Industry", "Ground Transport", "International Aviation",
+           "Domestic Aviation", "Residential", "Power"}
 
 
 def load_data(path=DATA_PATH):
@@ -41,21 +43,28 @@ def load_data(path=DATA_PATH):
 
 
 def validate_data(frame):
+    """Require complete daily coverage for all six sectors in each geography."""
+    if frame.empty:
+        raise ValueError("No emissions observations")
+    if frame.isna().any().any():
+        raise ValueError("Missing values in emissions records")
+    if set(frame["sector"].unique()) != SECTORS:
+        raise ValueError("Expected all six emissions sectors")
+    expected_dates = pd.date_range(frame["date"].min(), frame["date"].max(), freq="D")
     if frame.duplicated(["country", "date", "sector"]).any():
         raise ValueError("Duplicate country/date/sector records")
     if not np.isfinite(frame["value"]).all() or (frame["value"] < 0).any():
         raise ValueError("Emissions must be finite and nonnegative")
-    sectors = set(frame["sector"].unique())
     for country, group in frame.groupby("country"):
         dates = pd.DatetimeIndex(group["date"].unique()).sort_values()
-        if not dates.equals(pd.date_range(dates.min(), dates.max(), freq="D")):
+        if not dates.equals(expected_dates):
             raise ValueError(f"Missing daily observations for {country}")
-        if not group.groupby("date")["sector"].nunique().eq(len(sectors)).all():
+        if not group.groupby("date")["sector"].nunique().eq(len(SECTORS)).all():
             raise ValueError(f"Incomplete sector coverage for {country}")
 
 
 def daily_series(frame, country):
-    """Sum sectors within one geography; never add WORLD to its components."""
+    """Return one daily sector total for the requested geography."""
     selected = frame.loc[frame["country"].eq(country)]
     if selected.empty:
         raise ValueError(f"Unknown geography: {country}")

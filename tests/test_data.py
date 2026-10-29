@@ -37,3 +37,18 @@ def test_missing_sector_rejected(data):
 def test_unknown_country_rejected(data):
     with pytest.raises(ValueError, match="Unknown"):
         daily_series(data, "Unknown")
+
+
+@pytest.mark.parametrize("kind", ["entire_sector", "country_boundary", "null", "empty"])
+def test_incomplete_records_rejected(data, kind):
+    changed = data.copy()
+    if kind == "entire_sector":
+        changed = changed.loc[changed.sector.ne("Power")]
+    elif kind == "country_boundary":
+        changed = changed.loc[~((changed.country == "Russia") & (changed.date == changed.date.min()))]
+    elif kind == "null":
+        changed.loc[changed.index[0], "value"] = float("nan")
+    else:
+        changed = changed.iloc[:0]
+    with pytest.raises(ValueError):
+        validate_data(changed)
