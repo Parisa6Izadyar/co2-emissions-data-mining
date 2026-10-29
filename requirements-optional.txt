@@ -1,0 +1,2 @@
+# Only needed for live World Bank enrichment; excluded from the offline run.
+wbgapi>=1.0.12,<2
